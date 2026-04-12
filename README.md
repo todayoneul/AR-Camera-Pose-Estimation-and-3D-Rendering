@@ -38,6 +38,61 @@ OpenCV와 NumPy만으로 다음 파이프라인을 통합 구현한 프로젝트
 - 비교 영상(좌: 원본, 우: AR): [output/compare_test.mp4](output/compare_test.mp4)
 - 안정화 테스트 영상: [output/final_test_noblock.mp4](output/final_test_noblock.mp4)
 
+## 대용량 영상 업로드 정책 (Git LFS + Media Branch)
+
+대용량 영상을 Git 안에서 관리하려면 "브랜치 분리"만으로는 부족하고, GitHub 100MB 제한 때문에 Git LFS를 함께 사용해야 합니다.
+
+현재 용량 기준(참고):
+
+- publicBench.mp4: 183MB
+- cube.mp4: 120MB
+- output/final_test_noblock.mp4: 131MB
+- output/compare_test.mp4: 129MB
+
+### 권장 워크플로우
+
+1. main 브랜치에는 코드 + README 미리보기(GIF/이미지)만 유지
+2. 고화질 원본 영상은 `media-assets` 브랜치에서 Git LFS로 관리
+3. 링크/경로 관리는 [EXTERNAL_MEDIA_LINKS.md](EXTERNAL_MEDIA_LINKS.md)에 기록
+
+### 초기 설정
+
+~~~bash
+git lfs install
+git lfs track "*.mp4" "*.MOV" "*.mov"
+git add .gitattributes
+git commit -m "chore: track media via git-lfs"
+~~~
+
+### media 브랜치 생성 및 업로드
+
+~~~bash
+git switch -c media-assets
+git add publicBench.mp4 cube.mp4 output/compare_test.mp4 output/final_test_noblock.mp4
+git commit -m "media: add demo videos via lfs"
+git push -u origin media-assets
+git switch main
+~~~
+
+### 이미 일반 Git으로 영상을 커밋한 경우
+
+대용량 파일이 일반 Git 히스토리에 이미 들어갔다면 LFS migration이 필요할 수 있습니다.
+
+~~~bash
+git lfs migrate import --include="*.mp4,*.MOV,*.mov"
+~~~
+
+주의: `git lfs migrate import`는 히스토리를 재작성하므로, 협업 저장소에서는 팀 합의 후 진행해야 합니다.
+
+필요 시 README 미리보기용 저용량 버전 생성 예시:
+
+~~~bash
+ffmpeg -y -i publicBench.mp4 \
+  -vf "fps=10,scale=960:-1:flags=lanczos" \
+  -c:v libx264 -crf 30 -preset veryfast -an \
+  output/readme_assets/publicBench_preview_small.mp4
+~~~
+
 ## 프로젝트 구조
 
 ~~~text
