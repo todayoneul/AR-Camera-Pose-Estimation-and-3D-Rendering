@@ -3,3 +3,5 @@ __pycache__/
 .vscode/
 /test
 *.pdf
+.DS_Store
+*.mp4
